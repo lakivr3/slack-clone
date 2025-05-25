@@ -3,7 +3,6 @@ import { mutation, query, QueryCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
-import { measureMemory } from "vm";
 
 const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
   const messages = await ctx.db
@@ -18,6 +17,7 @@ const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
       count: 0,
       image: undefined,
       timestamp: 0,
+      name: "",
     };
   }
   const lastMessage = messages[messages.length - 1];
@@ -27,6 +27,7 @@ const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
       count: 0,
       image: undefined,
       timestamp: 0,
+      name: "",
     };
   }
   const lastMessageUser = await populateUser(ctx, lastMessageMember.userId);
@@ -35,6 +36,7 @@ const populateThread = async (ctx: QueryCtx, messageId: Id<"messages">) => {
     count: messages.length,
     image: lastMessageUser?.image,
     timestamp: lastMessage._creationTime,
+    name: lastMessageUser?.name,
   };
 };
 
@@ -255,6 +257,7 @@ export const get = query({
               reactions: reactionsWithoutMemberIdProp,
               threadCount: thread.count,
               threadImage: thread.image,
+              threadName: thread.name,
               threadTimestamp: thread.timestamp,
             };
           })
@@ -271,7 +274,7 @@ export const create = mutation({
     workspaceId: v.id("workspace"),
     channelId: v.optional(v.id("channels")),
     conversationId: v.optional(v.id("conversations")),
-    parentMessagesId: v.optional(v.id("messages")),
+    parentMessageId: v.optional(v.id("messages")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -282,8 +285,8 @@ export const create = mutation({
 
     let _conversationId = args.conversationId;
     //only possible if we are replaying in a thread in 1:1 conversation
-    if (!args.conversationId && !args.channelId && args.parentMessagesId) {
-      const parentMessage = await ctx.db.get(args.parentMessagesId);
+    if (!args.conversationId && !args.channelId && args.parentMessageId) {
+      const parentMessage = await ctx.db.get(args.parentMessageId);
       if (!parentMessage) throw new Error("Parent message not found");
 
       _conversationId = parentMessage.conversationId;
@@ -296,7 +299,7 @@ export const create = mutation({
       channelId: args.channelId,
       conversationId: _conversationId,
       workspaceId: args.workspaceId,
-      parentMessageId: args.parentMessagesId,
+      parentMessageId: args.parentMessageId,
     });
     return messageId;
   },

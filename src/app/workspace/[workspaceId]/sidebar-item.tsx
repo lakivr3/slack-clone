@@ -43,10 +43,10 @@ export const SidebarItem = ({
       asChild
       className={cn(sidebarItemVarians({ variant }))}
     >
-      <Link href={`/workspace/${workspaceId}/channel/${id}`}>
+      <div className="cursor-pointer">
         <Icon className="size-3.5 mr-1 shrink-0" />
         <span className="text-sm truncate">{label}</span>
-      </Link>
+      </div>
     </Button>
   );
 };

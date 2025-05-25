@@ -19,9 +19,10 @@ export default function Home() {
     if (workspaceId) router.replace(`/workspace/${workspaceId}`);
     else if (!open) setOpen(true);
   }, [workspaceId, isLoading, open, setOpen, router]);
+
   return (
-    <>
-      <UserButton />
-    </>
+    <div className="h-full flex items-center justify-center">
+      <Loader className="size-6 animate-spin text-muted-foreground" />
+    </div>
   );
 }
